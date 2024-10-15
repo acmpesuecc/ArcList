@@ -1,4 +1,4 @@
-# ArcList ᚪᚱᚳᛚᛁᛋᛏ
+# ArcList ᚬᚱᚴᛚᛁᛋᛏ
 ArcList is a minimalist, intuitive to-do app built with Go and HTMX. The app's primary purpose is to explore and showcase the potential of HTMX for seamless, modern front-end interactivity, paired with Go's robust back-end capabilities.
 
 ## Features
