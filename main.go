@@ -84,7 +84,6 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		// Re-render task list after adding
 		renderTaskList(w)
 	}
 }
@@ -99,13 +98,10 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-
-		// Re-render task list after deleting
 		renderTaskList(w)
 	}
 }
 
-// Helper function to render tasklist template
 func renderTaskList(w http.ResponseWriter) {
 	rows, err := db.Query("SELECT id, task FROM todos")
 	if err != nil {
