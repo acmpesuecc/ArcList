@@ -1,18 +1,27 @@
 {{define "todo-item"}}
 <li
-  class="flex justify-between gap-24 items-center border rounded p-3 px-8 text-xl"
+  class="flex justify-between items-center border rounded p-3 px-8 text-xl task"
+  draggable="true"
   id="task-{{.ID}}"
+  data-id="{{.ID}}"
 >
+  <!-- Drag handle icon (Font Awesome) -->
+  <span class="drag-handle pr-4 cursor-grab">
+    <i class="fas fa-bars"></i>
+  </span>
+
+  <!-- Task content -->
   <span
     hx-get="/edit/{{.ID}}"
     hx-trigger="click"
     hx-target="#task-{{.ID}}"
     hx-swap="outerHTML"
-    class="task-content"
+    class="task-content flex-grow"
   >
     {{.Task}}
   </span>
 
+  <!-- Delete button with icon -->
   <form
     hx-post="/delete"
     hx-target="#todo-list"
@@ -21,8 +30,10 @@
     style="display: inline"
   >
     <input type="hidden" name="id" value="{{.ID}}" />
-    <button type="submit" class="border p-2 px-3 rounded text-sm">
-      Delete
+    <button
+      type="submit"
+      class="bg-blue-500 text-white p-2 px-3 rounded hover:bg-blue-600"
+    > Delete
     </button>
   </form>
 </li>
