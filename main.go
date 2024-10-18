@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -37,6 +38,7 @@ func main() {
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/add", addHandler)
 	http.HandleFunc("/delete", deleteHandler)
+	http.HandleFunc("/search", searchHandler) // New search handler
 
 	log.Println("Server started at http://localhost:8080")
 	http.ListenAndServe(":8080", nil)
@@ -56,19 +58,7 @@ func createTable() {
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	// Get search query from the request
-	searchQuery := r.URL.Query().Get("search")
-
-	var rows *sql.Rows
-	var err error
-
-	// If a search query exists, filter the todos
-	if searchQuery != "" {
-		rows, err = db.Query("SELECT id, task FROM todos WHERE task LIKE ?", "%"+searchQuery+"%")
-	} else {
-		rows, err = db.Query("SELECT id, task FROM todos")
-	}
-
+	rows, err := db.Query("SELECT id, task FROM todos")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -112,6 +102,30 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		renderTaskList(w)
 	}
+}
+
+// New search handler
+func searchHandler(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query().Get("q")
+	query = strings.ToLower(query)
+
+	rows, err := db.Query("SELECT id, task FROM todos")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var todos []Todo
+	for rows.Next() {
+		var todo Todo
+		rows.Scan(&todo.ID, &todo.Task)
+		if strings.Contains(strings.ToLower(todo.Task), query) {
+			todos = append(todos, todo)
+		}
+	}
+
+	tpl.ExecuteTemplate(w, "tasklist", todos)
 }
 
 func renderTaskList(w http.ResponseWriter) {
