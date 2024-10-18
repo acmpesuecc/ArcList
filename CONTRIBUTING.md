@@ -76,6 +76,4 @@ We're committed to maintaining a positive and inclusive community, and your coop
 ## Guidelines for Contributions
 
 1. **Claiming an Issue**: Before you start working on an issue, make sure it's assigned to you. We do this to avoid overlapping efforts and to ensure your hard work doesn't go to waste. Please avoid raising a PR for an issue assigned to someone else.
-2. **Commit Format**: When making commits, follow this format: `tag-#issue-number: <commit-message>`. The tag should be one of these: `fix`, `feat`, `docs`, `chore`, `refactor`.
-3. **PR Title**: When creating a Pull Request, the title should be in this format: `tag-#issue-number: <Title-of-PR>`. Again, use the same tags: `fix`, `feat`, `docs`, `chore`, `refactor`.
-4. **Selective Staging**: Make sure you stage only the necessary commits when raising a PR.
+2. **Selective Staging**: Make sure you stage only the necessary commits when raising a PR.
