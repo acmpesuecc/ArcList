@@ -47,6 +47,10 @@ To setup the project locally follow the steps:
     ```
     go run main.go
     ```
+
+> [!NOTE]  
+> It might ask for permission, please 'Allow'
+
 10. Naviagte to http://localhost:8080/
 11. After making changes to your codebase, stage and push the code to your forked repo
    
