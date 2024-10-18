@@ -37,6 +37,8 @@ func main() {
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/add", addHandler)
 	http.HandleFunc("/delete", deleteHandler)
+	http.HandleFunc("/edit/", editHandler)
+	http.HandleFunc("/update", updateHandler)
 	http.HandleFunc("/search", searchHandler) // New search route
 
 	log.Println("Server started at http://localhost:8080")
@@ -101,6 +103,52 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 		renderTaskList(w)
 	}
 }
+
+func editHandler(w http.ResponseWriter, r *http.Request) {
+    id := r.URL.Path[len("/edit/"):]
+    
+    var todo Todo
+    err := db.QueryRow("SELECT id, task FROM todos WHERE id = ?", id).Scan(&todo.ID, &todo.Task)
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    tpl.ExecuteTemplate(w, "edit.html", todo)
+}
+
+
+func updateHandler(w http.ResponseWriter, r *http.Request) {
+    if r.Method == http.MethodPost {
+        id := r.FormValue("id")
+        task := r.FormValue("task")
+        
+        if id != "" && task != "" {
+            _, err := db.Exec("UPDATE todos SET task = ? WHERE id = ?", task, id)
+            if err != nil {
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
+            }
+
+            rows, err := db.Query("SELECT id, task FROM todos")
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			defer rows.Close()
+
+			var todos []Todo
+			for rows.Next() {
+				var todo Todo
+				rows.Scan(&todo.ID, &todo.Task)
+				todos = append(todos, todo)
+			}
+
+			tpl.ExecuteTemplate(w, "tasklist", todos)
+        }
+    }
+}
+
 
 func searchHandler(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("query")
