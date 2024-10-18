@@ -1,12 +1,16 @@
-{{define "tasklist"}}
-    {{range .}}
-        <li class="flex justify-between gap-12 items-center border rounded p-3 px-8 text-xl">
-            <span>{{.Task}}</span>
-            <span>Due: {{.Due}}</span>
-            <form hx-post="/delete" hx-target="#todo-list" hx-swap="innerHTML" class="delete-task-form" style="display:inline;">
-                <input type="hidden" name="id" value="{{.ID}}">
-                <button type="submit" class="border p-2 px-3 rounded text-sm">Delete</button>
-            </form>
-        </li>
-    {{end}}
+{{define "tasklist"}} 
+    {{range .}} 
+        {{template "todo-item" .}} 
+    {{end}} 
+{{end}}
+
+{{define "todo-item"}}
+    <li class="flex justify-between gap-12 items-center border rounded p-3 px-8 text-xl">
+        <span>{{.Task}}</span>
+        <span>Due: {{.Due}}</span>
+        <form hx-post="/delete" hx-target="#todo-list" hx-swap="innerHTML" class="delete-task-form" style="display:inline;">
+            <input type="hidden" name="id" value="{{.ID}}">
+            <button type="submit" class="border p-2 px-3 rounded text-sm">Delete</button>
+        </form>
+    </li>
 {{end}}

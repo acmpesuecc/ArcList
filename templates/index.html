@@ -1,78 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scope=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scope=1.0" />
     <title>Todo List</title>
     <script src="https://unpkg.com/htmx.org@1.4.1"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
     <style>
-        .task {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 1rem;
-            border-radius: 5px;
-            background-color: #f5f5f5;
-            transition: all 0.2s ease-in-out;
-        }
+      .task {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        border-radius: 5px;
+        background-color: #f5f5f5;
+        transition: all 0.2s ease-in-out;
+      }
 
-        .task:hover {
-            background-color: #e0e0e0;
-            cursor: pointer;
-        }
+      .task:hover {
+        background-color: #e0e0e0;
+        cursor: pointer;
+      }
 
-        .completed {
-            text-decoration: line-through;
-            opacity: 0.7;
-        }
+      .completed {
+        text-decoration: line-through;
+        opacity: 0.7;
+      }
     </style>
-</head>
+  </head>
 
-<body class="min-h-screen bg-gray-100 flex items-center justify-center bg-gradient-to-r from-fuchsia-600 to-pink-600">
+  <body
+    class="min-h-screen bg-gray-100 flex items-center justify-center bg-gradient-to-r from-fuchsia-600 to-pink-600"
+  >
     <div class="w-full max-w-lg bg-white rounded-lg shadow-md px-8 py-6">
-        <h1 class="text-2xl font-bold text-center mb-6">Todo List</h1>
+      <h1 class="text-2xl font-bold text-center mb-6">Todo List</h1>
 
-        <!-- Search Form -->
-        <form hx-get="/search" hx-target="#todo-list" hx-swap="innerHTML">
-            <div class="flex items-center mb-4">
-                <input type="text" name="query" placeholder="Search tasks..."
-                    class="w-full border border-black rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <button type="submit"
-                    class="ml-4 bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600">Search</button>
-            </div>
-        </form>
+      <!-- Search Form -->
+      <form hx-get="/search" hx-target="#todo-list" hx-swap="innerHTML">
+        <div class="flex items-center mb-4">
+          <input
+            type="text"
+            name="query"
+            placeholder="Search tasks..."
+            class="w-full border border-black rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            type="submit"
+            class="ml-4 bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600"
+          >
+            Search
+          </button>
+        </div>
+      </form>
 
-        <!-- Add Task Form -->
-        <form hx-post="/add" hx-target="#todo-list" hx-swap="innerHTML">
-            <div class="flex items-center mb-4">
-                <input type="text" name="task" placeholder="Add new task" required
-                    class="w-full border border-black rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <input type="date" name="due_date" class="ml-4 border border-black rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <button type="submit"
-                    class="ml-4 bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600">Add</button>
-            </div>
-        </form>
+      <!-- Add Task Form -->
+      <form hx-post="/add" hx-target="#todo-list" hx-swap="innerHTML">
+        <div class="flex items-center mb-4">
+          <input
+            type="text"
+            name="task"
+            placeholder="Add new task"
+            required
+            class="w-full border border-black rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <input
+            type="date"
+            name="due_date"
+            class="ml-4 border border-black rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            type="submit"
+            class="ml-4 bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600"
+          >
+            Add
+          </button>
+        </div>
+      </form>
 
-        <!-- Task List -->
-        <ul id="todo-list" class="space-y-2">
-            {{template "tasklist" .}}
-        </ul>
+      <!-- Task List -->
+      <ul id="todo-list" class="space-y-2">
+        {{template "tasklist" .}}
+      </ul>
     </div>
-</body>
-
+  </body>
 </html>
 
 {{define "tasklist"}}
-    {{range .}}
-        <li class="flex justify-between gap-12 items-center border rounded p-3 px-8 text-xl">
-            <span>{{.Task}}</span>
-            <span>Due: {{.Due}}</span>
-            <form hx-post="/delete" hx-target="#todo-list" hx-swap="innerHTML" class="delete-task-form" style="display:inline;">
-                <input type="hidden" name="id" value="{{.ID}}">
-                <button type="submit" class="border p-2 px-3 rounded text-sm">Delete</button>
-            </form>
-        </li>
-    {{end}}
+  {{range .}}
+    <li class="flex justify-between gap-12 items-center border rounded p-3 px-8 text-xl">
+      <span>{{.Task}}</span>
+      <span>Due: {{.Due}}</span>
+      <form hx-post="/delete" hx-target="#todo-list" hx-swap="innerHTML" class="delete-task-form" style="display:inline;">
+        <input type="hidden" name="id" value="{{.ID}}">
+        <button type="submit" class="border p-2 px-3 rounded text-sm">Delete</button>
+      </form>
+    </li>
+  {{end}}
 {{end}}
