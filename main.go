@@ -12,6 +12,7 @@ import (
 type Todo struct {
 	ID   int
 	Task string
+	Due  string // Date without time
 }
 
 var db *sql.DB
@@ -22,7 +23,6 @@ func init() {
 }
 
 func main() {
-	// Open SQLite database
 	var err error
 	db, err = sql.Open("sqlite3", "./sqlite.db")
 	if err != nil {
@@ -37,17 +37,19 @@ func main() {
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/add", addHandler)
 	http.HandleFunc("/delete", deleteHandler)
-	http.HandleFunc("/search", searchHandler) // New search route
+	http.HandleFunc("/search", searchHandler)
 
 	log.Println("Server started at http://localhost:8080")
 	http.ListenAndServe(":8080", nil)
 }
 
+// Create table with `due_date`
 func createTable() {
 	query := `
     CREATE TABLE IF NOT EXISTS todos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        task TEXT
+        task TEXT,
+        due_date DATE
     );
     `
 	_, err := db.Exec(query)
@@ -57,7 +59,7 @@ func createTable() {
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	rows, err := db.Query("SELECT id, task FROM todos")
+	rows, err := db.Query("SELECT id, task, DATE(due_date) FROM todos ORDER BY due_date ASC") // Use DATE to ensure no time
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -67,7 +69,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	var todos []Todo
 	for rows.Next() {
 		var todo Todo
-		rows.Scan(&todo.ID, &todo.Task)
+		rows.Scan(&todo.ID, &todo.Task, &todo.Due)
 		todos = append(todos, todo)
 	}
 
@@ -77,8 +79,10 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 func addHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		task := r.FormValue("task")
+		due := r.FormValue("due_date") // This is already in YYYY-MM-DD format from HTML input
+
 		if task != "" {
-			_, err := db.Exec("INSERT INTO todos (task) VALUES (?)", task)
+			_, err := db.Exec("INSERT INTO todos (task, due_date) VALUES (?, ?)", task, due)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -105,7 +109,7 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 func searchHandler(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("query")
 
-	rows, err := db.Query("SELECT id, task FROM todos WHERE task LIKE ?", "%"+query+"%")
+	rows, err := db.Query("SELECT id, task, DATE(due_date) FROM todos WHERE task LIKE ?", "%"+query+"%") // Use DATE to strip time
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -115,7 +119,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 	var todos []Todo
 	for rows.Next() {
 		var todo Todo
-		rows.Scan(&todo.ID, &todo.Task)
+		rows.Scan(&todo.ID, &todo.Task, &todo.Due)
 		todos = append(todos, todo)
 	}
 
@@ -123,7 +127,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func renderTaskList(w http.ResponseWriter) {
-	rows, err := db.Query("SELECT id, task FROM todos")
+	rows, err := db.Query("SELECT id, task, DATE(due_date) FROM todos ORDER BY due_date ASC") // Ensure date only
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -133,7 +137,7 @@ func renderTaskList(w http.ResponseWriter) {
 	var todos []Todo
 	for rows.Next() {
 		var todo Todo
-		rows.Scan(&todo.ID, &todo.Task)
+		rows.Scan(&todo.ID, &todo.Task, &todo.Due)
 		todos = append(todos, todo)
 	}
 
