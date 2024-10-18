@@ -8,7 +8,6 @@
     <script src="https://unpkg.com/htmx.org@1.4.1"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom styles for a cleaner look */
         .task {
             display: flex;
             align-items: center;
@@ -35,6 +34,17 @@
     <div class="w-full max-w-lg bg-white rounded-lg shadow-md px-8 py-6">
         <h1 class="text-2xl font-bold text-center mb-6">Todo List</h1>
 
+        <!-- Search Form with a Search Button -->
+        <form hx-get="/search" hx-target="#todo-list" hx-swap="innerHTML">
+            <div class="flex items-center mb-4">
+                <input type="text" name="query" placeholder="Search tasks..."
+                    class="w-full border border-black rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button type="submit"
+                    class="ml-4 bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600">Search</button>
+            </div>
+        </form>
+
+        <!-- Add Task Form -->
         <form hx-post="/add" hx-target="#todo-list" hx-swap="innerHTML">
             <div class="flex items-center mb-4">
                 <input type="text" name="task" placeholder="Add new task" required
@@ -45,7 +55,8 @@
         </form>
 
         <ul id="todo-list" class="space-y-2">
-            {{template "tasklist" .}} </ul>
+            {{template "tasklist" .}}
+        </ul>
     </div>
 </body>
 
