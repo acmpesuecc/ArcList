@@ -1,121 +1,66 @@
 package main
 
 import (
-	"database/sql"
-	"html/template"
-	"log"
+	"encoding/json"
 	"net/http"
+	"sort"
+	"sync"
+	"time"
 
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/gorilla/mux"
 )
 
 type Todo struct {
-	ID   int
-	Task string
+	Title   string    `json:"title"`
+	DueDate time.Time `json:"dueDate"`
 }
 
-var db *sql.DB
-var tpl *template.Template
-
-func init() {
-	tpl = template.Must(template.ParseGlob("templates/*.html"))
-}
+var (
+	todos = []Todo{}
+	mu    sync.Mutex
+)
 
 func main() {
-	// Open SQLite database
-	var err error
-	db, err = sql.Open("sqlite3", "./sqlite.db")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
+	r := mux.NewRouter()
+	r.HandleFunc("/todos", getTodos).Methods("GET")
+	r.HandleFunc("/todos", addTodo).Methods("POST")
 
-	// Initialize the database
-	createTable()
-
-	// Route handlers
-	http.HandleFunc("/", indexHandler)
-	http.HandleFunc("/add", addHandler)
-	http.HandleFunc("/delete", deleteHandler)
-
-	log.Println("Server started at http://localhost:8080")
+	http.Handle("/", http.FileServer(http.Dir("./"))) // Serve static files
+	http.Handle("/", r)
 	http.ListenAndServe(":8080", nil)
 }
 
-func createTable() {
-	query := `
-    CREATE TABLE IF NOT EXISTS todos (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        task TEXT
-    );
-    `
-	_, err := db.Exec(query)
-	if err != nil {
-		log.Fatal(err)
-	}
+func getTodos(w http.ResponseWriter, r *http.Request) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	// Sort todos by due date
+	sort.Slice(todos, func(i, j int) bool {
+		return todos[i].DueDate.Before(todos[j].DueDate)
+	})
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(todos)
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	rows, err := db.Query("SELECT id, task FROM todos")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+func addTodo(w http.ResponseWriter, r *http.Request) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	var todo Todo
+	if err := json.NewDecoder(r.Body).Decode(&todo); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	defer rows.Close()
 
-	var todos []Todo
-	for rows.Next() {
-		var todo Todo
-		rows.Scan(&todo.ID, &todo.Task)
-		todos = append(todos, todo)
-	}
-
-	tpl.ExecuteTemplate(w, "index.html", todos)
-}
-
-func addHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		task := r.FormValue("task")
-		if task != "" {
-			_, err := db.Exec("INSERT INTO todos (task) VALUES (?)", task)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-		}
-
-		renderTaskList(w)
-	}
-}
-
-func deleteHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		id := r.FormValue("id")
-		if id != "" {
-			_, err := db.Exec("DELETE FROM todos WHERE id = ?", id)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-		}
-		renderTaskList(w)
-	}
-}
-
-func renderTaskList(w http.ResponseWriter) {
-	rows, err := db.Query("SELECT id, task FROM todos")
+	// Parse the due date
+	dueDate, err := time.Parse("2006-01-02", r.FormValue("dueDate"))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	defer rows.Close()
+	todo.DueDate = dueDate
 
-	var todos []Todo
-	for rows.Next() {
-		var todo Todo
-		rows.Scan(&todo.ID, &todo.Task)
-		todos = append(todos, todo)
-	}
-
-	tpl.ExecuteTemplate(w, "tasklist", todos)
+	todos = append(todos, todo)
+	w.WriteHeader(http.StatusCreated)
 }

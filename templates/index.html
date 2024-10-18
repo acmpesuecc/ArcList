@@ -4,23 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Todo List</title>
-    <script src="https://unpkg.com/htmx.org@1.4.1"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="flex items-center justify-center">
-    <div class="w-[70%] flex flex-col items-center">
-        <h1 class="mt-[5rem] mb-[3rem] text-4xl font-bold">Todo List</h1>
+<body>
+    <h1>Todo List</h1>
+    <form id="todo-form">
+        <input type="text" id="todo-title" placeholder="Todo Title" required>
+        <input type="date" id="due-date" required>
+        <button type="submit">Add Todo</button>
+    </form>
+    <ul id="todo-list"></ul>
 
-        <form hx-post="/add" hx-target="#todo-list" hx-swap="innerHTML">
-            <div class="flex justify-center gap-10 mb-20">
-                <input type="text" name="task" placeholder="Add new task" required class="border border-gray-600 rounded p-2 px-4">
-                <button type="submit" class="text-xl p-2 px-4 border border-gray-300 rounded">Add</button>
-            </div>
-        </form>              
+    <script>
+        const form = document.getElementById('todo-form');
+        const todoList = document.getElementById('todo-list');
 
-        <ul id="todo-list" class="flex flex-col gap-2">
-            {{template "tasklist" .}}  <!-- Render the task list template -->
-        </ul>
-    </div>
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('todo-title').value;
+            const dueDate = document.getElementById('due-date').value;
+
+            const response = await fetch('/todos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, dueDate }),
+            });
+
+            if (response.ok) {
+                form.reset();
+                loadTodos();
+            }
+        });
+
+        async function loadTodos() {
+            const response = await fetch('/todos');
+            const todos = await response.json();
+            todoList.innerHTML = '';
+            todos.forEach(todo => {
+                const li = document.createElement('li');
+                li.textContent = `${todo.title} (Due: ${new Date(todo.dueDate).toLocaleDateString()})`;
+                todoList.appendChild(li);
+            });
+        }
+
+        loadTodos();
+    </script>
 </body>
 </html>
