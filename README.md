@@ -21,27 +21,27 @@ To setup the project locally follow the steps:
 4. Add the upstream repository
 
     ```
-    git clone https://github.com/acmpesuecc/ArcList.git
+    cd ArcList
+    git remote add upstream https://github.com/acmpesuecc/ArcList.git
+    git pull upstream main
     ```
 6. Add a new branch ( THIS STEP IS OPTIONAL and you can continue to work on the main branch )
 
     ```
-    git checkout -b "<NEW-BRANCH-NAME>"
+    git checkout -b <NEW-BRANCH-NAME>
     ```
-8. Go to the repository root directory
+8. Now to Run the application, Go to the repository root directory
 
     ```
-    cd ArcList
     go run main.go
     ```
 10. Naviagte to http://localhost:8080/
-11. After making changes to your codebase, push the code to your forked repo
+11. After making changes to your codebase, stage and push the code to your forked repo
    
     ```
-    git push -u origin main
-    ```
-    if you are not working on the main branch
-    ```
+    git add <\files_that_you_made_changes>
+    git commit -m "<COMMIT-MESSAGE>"
     git push -u origin <BRANCH-NAME>
     ```
+   
 11. Finally have Fun 😃 and Happy Contributing !! 🥳
