@@ -56,7 +56,19 @@ func createTable() {
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	rows, err := db.Query("SELECT id, task FROM todos")
+	// Get search query from the request
+	searchQuery := r.URL.Query().Get("search")
+
+	var rows *sql.Rows
+	var err error
+
+	// If a search query exists, filter the todos
+	if searchQuery != "" {
+		rows, err = db.Query("SELECT id, task FROM todos WHERE task LIKE ?", "%"+searchQuery+"%")
+	} else {
+		rows, err = db.Query("SELECT id, task FROM todos")
+	}
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

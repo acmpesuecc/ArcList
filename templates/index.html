@@ -11,15 +11,22 @@
     <div class="w-[70%] flex flex-col items-center">
         <h1 class="mt-[5rem] mb-[3rem] text-4xl font-bold">Todo List</h1>
 
+        <form method="GET" action="/" hx-target="#todo-list" hx-swap="innerHTML">
+            <div class="flex justify-center gap-10 mb-20">
+                <input type="text" name="search" placeholder="Search tasks..." class="border border-gray-600 rounded p-2 px-4">
+                <button type="submit" class="text-xl p-2 px-4 border border-gray-300 rounded">Search</button>
+            </div>
+        </form>
+
         <form hx-post="/add" hx-target="#todo-list" hx-swap="innerHTML">
             <div class="flex justify-center gap-10 mb-20">
                 <input type="text" name="task" placeholder="Add new task" required class="border border-gray-600 rounded p-2 px-4">
                 <button type="submit" class="text-xl p-2 px-4 border border-gray-300 rounded">Add</button>
             </div>
-        </form>              
+        </form>
 
         <ul id="todo-list" class="flex flex-col gap-2">
-            {{template "tasklist" .}}  <!-- Render the task list template -->
+            {{template "tasklist" .}}  
         </ul>
     </div>
 </body>
