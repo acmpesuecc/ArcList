@@ -37,6 +37,7 @@ func main() {
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/add", addHandler)
 	http.HandleFunc("/delete", deleteHandler)
+	http.HandleFunc("/search", searchHandler) // New search route
 
 	log.Println("Server started at http://localhost:8080")
 	http.ListenAndServe(":8080", nil)
@@ -83,7 +84,6 @@ func addHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-
 		renderTaskList(w)
 	}
 }
@@ -100,6 +100,26 @@ func deleteHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		renderTaskList(w)
 	}
+}
+
+func searchHandler(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query().Get("query")
+
+	rows, err := db.Query("SELECT id, task FROM todos WHERE task LIKE ?", "%"+query+"%")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var todos []Todo
+	for rows.Next() {
+		var todo Todo
+		rows.Scan(&todo.ID, &todo.Task)
+		todos = append(todos, todo)
+	}
+
+	tpl.ExecuteTemplate(w, "tasklist", todos)
 }
 
 func renderTaskList(w http.ResponseWriter) {
