@@ -8,8 +8,11 @@ ArcList is a minimalist, intuitive to-do app built with Go and HTMX. The app's p
  
 ## Setting up the Project and Contributing to the Project
 
+Prerequisites
+ - [Go](https://go.dev/doc/install)
+
 To setup the project locally follow the steps:
-1. Fork and Star the project.
+1. Fork the project.
 2. Clone your forked repository onto your local machine.
 
     ```
