@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo List</title>
+    <script src="https://unpkg.com/htmx.org@1.4.1"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex items-center justify-center">
+    <div class="w-[70%] flex flex-col items-center">
+        <h1 class="mt-[5rem] mb-[3rem] text-4xl font-bold">Todo List</h1>
+
+        <!-- Form for adding a task -->
+        <form hx-post="/add" hx-target="#todo-list" hx-swap="innerHTML">
+            <div class="flex justify-center gap-10 mb-20">
+                <input type="text" name="task" placeholder="Add new task" required class="border border-gray-600 rounded p-2 px-4">
+                <button type="submit" class="text-xl p-2 px-4 border border-gray-300 rounded">Add</button>
+            </div>
+        </form>              
+
+        <!-- Task list container -->
+        <ul id="todo-list" class="flex flex-col gap-2">
+            {{template "tasklist" .}}  <!-- Render the task list template -->
+        </ul>
+    </div>
+</body>
+</html>
