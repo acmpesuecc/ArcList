@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scope=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Todo List</title>
     <script src="https://unpkg.com/htmx.org@1.4.1"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,6 +11,23 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
     />
     <style>
+      body {
+        position: relative;
+      }
+      .toggle-button {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background-color: transparent;
+        border: none;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+      }
+
+      .theme_icon {
+        size: 50;
+      }
+
       .task {
         display: flex;
         align-items: center;
@@ -20,11 +37,6 @@
         background-color: #f5f5f5;
         transition: all 0.2s ease-in-out;
         user-select: none;
-      }
-
-      .task:hover {
-        background-color: #e0e0e0;
-        cursor: pointer;
       }
 
       .completed {
@@ -45,23 +57,40 @@
   </head>
 
   <body
-    class="min-h-screen bg-gray-100 flex items-center justify-center bg-gradient-to-r from-fuchsia-600 to-pink-600"
+    class="min-h-screen flex flex-col items-center justify-center"
+    id="body"
   >
-    <div class="w-full max-w-lg bg-white rounded-lg shadow-md px-8 py-6">
-      <h1 class="text-2xl font-bold text-center mb-6">Todo List</h1>
+    <button
+      id="toggle-button"
+      class="toggle-button"
+      onclick="toggleTheme()"
+      title="Toggle Theme"
+    >
+      <i id="theme-icon" class="fas fa-moon text-2xl"></i>
+    </button>
+
+    <div
+      id="todo-container"
+      class="w-full max-w-lg rounded-lg shadow-md px-8 py-6"
+    >
+      <h1 id="todo-title" class="text-2xl font-bold text-center mb-6">
+        Todo List
+      </h1>
 
       <!-- Search Form -->
       <form hx-get="/search" hx-target="#todo-list" hx-swap="innerHTML">
         <div class="flex items-center mb-4">
           <input
+            id="search-input"
             type="text"
             name="query"
             placeholder="Search tasks..."
-            class="w-full border border-black rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full border rounded px-4 py-2 focus:outline-none focus:ring-2"
           />
           <button
+            id="search-button"
             type="submit"
-            class="ml-4 bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600"
+            class="ml-4 font-bold py-2 px-4 rounded hover:bg-blue-600"
           >
             Search
           </button>
@@ -72,15 +101,17 @@
       <form hx-post="/add" hx-target="#todo-list" hx-swap="innerHTML">
         <div class="flex items-center mb-4">
           <input
+            id="add-task-input"
             type="text"
             name="task"
             placeholder="Add new task"
             required
-            class="w-full border border-black rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full border rounded px-4 py-2 focus:outline-none focus:ring-2"
           />
           <button
+            id="add-task-button"
             type="submit"
-            class="ml-4 bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600"
+            class="ml-4 font-bold py-2 px-4 rounded hover:bg-blue-600"
           >
             Add
           </button>
@@ -94,18 +125,84 @@
     </div>
 
     <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        const todoList = document.getElementById('todo-list');
+      function toggleTheme() {
+        const htmlElement = document.documentElement;
+        const currentTheme = localStorage.getItem("theme");
+        const newTheme = currentTheme === "dark" ? "light" : "dark";
+        localStorage.setItem("theme", newTheme);
+        applyTheme(newTheme);
+      }
+
+      function applyTheme(theme) {
+        const htmlElement = document.documentElement;
+        const body = document.getElementById("body");
+        const toggleButton = document.getElementById("toggle-button");
+        const themeIcon = document.getElementById("theme-icon");
+        const todoContainer = document.getElementById("todo-container");
+        const todoTitle = document.getElementById("todo-title");
+        const searchInput = document.getElementById("search-input");
+        const searchButton = document.getElementById("search-button");
+        const addTaskInput = document.getElementById("add-task-input");
+        const addTaskButton = document.getElementById("add-task-button");
+
+        if (theme === "dark") {
+          htmlElement.classList.add("dark");
+          body.className =
+            "min-h-screen flex flex-col items-center justify-center bg-[hsl(200,100%,6%)]";
+          toggleButton.className = "toggle-button";
+          toggleButton.classList.add("bg-transparent", "text-white");
+          themeIcon.classList.remove("fa-moon");
+          themeIcon.classList.add("fa-sun");
+          todoContainer.className =
+            "w-full max-w-lg bg-[hsl(210,100%,12%)] rounded-lg shadow-md px-8 py-6";
+          todoTitle.className =
+            "text-2xl text-white font-bold text-center mb-6";
+          searchInput.className =
+            "w-full border border-black rounded px-4 py-2 bg-[hsl(200,100%,18%)] text-[hsl(180,100%,90%)] focus:outline-none focus:ring-2 focus:ring-gray-500";
+          searchButton.className =
+            "ml-4 bg-[hsl(200,100%,18%)] text-[hsl(180,100%,90%)] font-bold py-2 px-4 rounded hover:bg-[hsl(200,100%,18%)]/10";
+          addTaskInput.className =
+            "w-full border border-black rounded px-4 py-2 bg-[hsl(200,100%,18%)] text-[hsl(180,100%,90%)] focus:outline-none focus:ring-2 focus:ring-gray-500";
+          addTaskButton.className =
+            "ml-4 bg-[hsl(200,100%,18%)] text-[hsl(180,100%,90%)] font-bold py-2 px-4 rounded hover:bg-[hsl(200,100%,18%)]/10";
+        } else {
+          htmlElement.classList.remove("dark");
+          body.className =
+            "min-h-screen flex flex-col items-center justify-center bg-gray-300";
+          toggleButton.className = "toggle-button";
+          toggleButton.classList.add("bg-transparent", "text-black");
+          themeIcon.classList.remove("fa-sun");
+          themeIcon.classList.add("fa-moon");
+          todoContainer.className =
+            "w-full max-w-lg bg-white rounded-lg shadow-md px-8 py-6";
+          todoTitle.className =
+            "text-2xl text-black font-bold text-center mb-6";
+          searchInput.className =
+            "w-full border border-black rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500";
+          searchButton.className =
+            "ml-4 bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600";
+          addTaskInput.className =
+            "w-full border border-black rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500";
+          addTaskButton.className =
+            "ml-4 bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600";
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const savedTheme = localStorage.getItem("theme") || "light";
+        applyTheme(savedTheme);
+
+        const todoList = document.getElementById("todo-list");
         let draggedItem = null;
 
-        todoList.addEventListener('dragstart', (e) => {
+        todoList.addEventListener("dragstart", (e) => {
           draggedItem = e.target;
-          e.dataTransfer.effectAllowed = 'move';
-          e.dataTransfer.setData('text/html', draggedItem.outerHTML);
-          draggedItem.classList.add('dragging');
+          e.dataTransfer.effectAllowed = "move";
+          e.dataTransfer.setData("text/html", draggedItem.outerHTML);
+          draggedItem.classList.add("dragging");
         });
 
-        todoList.addEventListener('dragover', (e) => {
+        todoList.addEventListener("dragover", (e) => {
           e.preventDefault();
           const afterElement = getDragAfterElement(todoList, e.clientY);
           const currentItem = draggedItem;
@@ -116,14 +213,14 @@
           }
         });
 
-        todoList.addEventListener('dragend', () => {
-          draggedItem.classList.remove('dragging');
+        todoList.addEventListener("dragend", () => {
+          draggedItem.classList.remove("dragging");
           updateOrder();
         });
 
         function getDragAfterElement(container, y) {
           const draggableElements = [
-            ...container.querySelectorAll('.task:not(.dragging)'),
+            ...container.querySelectorAll("li:not(.dragging)"),
           ];
 
           return draggableElements.reduce(
@@ -142,24 +239,16 @@
         }
 
         function updateOrder() {
-          const tasks = Array.from(todoList.children).map((item) =>
-            item.getAttribute('data-id')
+          const tasks = [...todoList.children].map((li) =>
+            li.getAttribute("data-id")
           );
-
-          fetch('/updateOrder', {
-            method: 'POST',
+          fetch("/updateOrder", {
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({ order: tasks }),
-          })
-            .then((response) => response.json())
-            .then((data) => {
-              console.log('Order updated successfully:', data);
-            })
-            .catch((error) => {
-              console.error('Error updating order:', error);
-            });
+          });
         }
       });
     </script>

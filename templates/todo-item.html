@@ -1,12 +1,12 @@
 {{define "todo-item"}}
 <li
-  class="flex justify-between items-center border rounded p-3 px-8 text-xl task"
+  class="flex justify-between items-center border rounded p-3 px-8 text-xl task dark:bg-[hsl(210,100%,6%)] dark:text-white dark:border-gray-300"
   draggable="true"
   id="task-{{.ID}}"
   data-id="{{.ID}}"
 >
   <!-- Drag handle icon (Font Awesome) -->
-  <span class="drag-handle pr-4 cursor-grab">
+  <span class="drag-handle dark:text-white pr-4 cursor-grab">
     <i class="fas fa-bars"></i>
   </span>
 
@@ -32,8 +32,9 @@
     <input type="hidden" name="id" value="{{.ID}}" />
     <button
       type="submit"
-      class="bg-blue-500 text-white p-2 px-3 rounded hover:bg-blue-600"
-    > Delete
+      class="bg-blue-500 text-white dark:bg-[hsl(200,100%,18%)] dark:text-[hsl(180,100%,90%)] p-2 px-3 rounded hover:bg-blue-600 dark:hover:bg-[hsl(200,100%,18%)]/10"
+    >
+      Delete
     </button>
   </form>
 </li>
