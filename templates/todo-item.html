@@ -4,6 +4,7 @@
   draggable="true"
   id="task-{{.ID}}"
   data-id="{{.ID}}"
+  data-due-date="{{.DueDate}}"
 >
   <!-- Drag handle icon (Font Awesome) -->
   <span class="drag-handle dark:text-white pr-4 cursor-grab">
@@ -19,6 +20,11 @@
     class="task-content flex-grow"
   >
     {{.Task}}
+  </span>
+
+  <!-- Due Date -->
+  <span class="due-date pr-4">
+    Due: {{.DueDate}}
   </span>
 
   <!-- Delete button with icon -->
@@ -38,4 +44,35 @@
     </button>
   </form>
 </li>
+{{end}}
+
+{{define "add-form"}}
+<div class="mb-8">
+  <form
+    hx-post="/add"
+    hx-target="#todo-list"
+    hx-swap="innerHTML"
+    class="flex gap-4 mb-4"
+    onsubmit="console.log('Form Submitted!');"
+  >
+    <input
+      type="text"
+      name="task"
+      placeholder="Add a new task..."
+      class="flex-grow p-2 border rounded dark:bg-[hsl(210,100%,6%)] dark:text-white dark:border-gray-300"
+      required
+    />
+    <input
+      type="date"
+      name="due_date"
+      class="p-2 border rounded dark:bg-[hsl(210,100%,6%)] dark:text-white dark:border-gray-300"
+    />
+    <button
+      type="submit"
+      class="bg-blue-500 text-white p-2 px-3 rounded hover:bg-blue-600"
+    >
+      Add
+    </button>
+  </form>
+</div>
 {{end}}

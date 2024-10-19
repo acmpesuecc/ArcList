@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Todo List</title>
-    <script src="https://unpkg.com/htmx.org@1.4.1"></script>
+    <script src="https://unpkg.com/htmx.org@1.5.0"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
       rel="stylesheet"
@@ -78,7 +78,7 @@
       </h1>
 
       <!-- Search Form -->
-      <form hx-get="/search" hx-target="#todo-list" hx-swap="innerHTML">
+      <form hx-get="/search" hx-target="#todo-list" hx-swap="innerHTML" class="search-task-form">
         <div class="flex items-center mb-4">
           <input
             id="search-input"
@@ -98,7 +98,7 @@
       </form>
 
       <!-- Add Task Form -->
-      <form hx-post="/add" hx-target="#todo-list" hx-swap="innerHTML">
+      <form hx-post="/add" hx-target="#todo-list" hx-swap="innerHTML" class="add-task-form">
         <div class="flex items-center mb-4">
           <input
             id="add-task-input"
@@ -107,6 +107,12 @@
             placeholder="Add new task"
             required
             class="w-full border rounded px-4 py-2 focus:outline-none focus:ring-2"
+          />
+          <input
+            type="date"
+            name="due_date"
+            placeholder="Due Date"
+            class="ml-4 border rounded px-4 py-2 focus:outline-none focus:ring-2"
           />
           <button
             id="add-task-button"
@@ -120,7 +126,17 @@
 
       <!-- Task List -->
       <ul id="todo-list" class="space-y-2">
-        {{template "tasklist" .}}
+        {{range .}}
+        <li id="task-{{.ID}}" class="task">
+          <span>{{.Task}}</span>
+          <span>Due: {{.DueDate}}</span>
+          <form hx-post="/delete" hx-target="#todo-list" hx-swap="innerHTML" style="display:inline;">
+            <input type="hidden" name="id" value="{{.ID}}" />
+            <button type="submit">Delete</button>
+          </form>
+          <a href="/edit/{{.ID}}">Edit</a>
+        </li>
+        {{end}}
       </ul>
     </div>
 

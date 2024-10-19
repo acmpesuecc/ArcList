@@ -14,6 +14,7 @@ type Todo struct {
 	ID       int
 	Task     string
 	Position int
+	DueDate  string
 }
 
 var db *sql.DB
@@ -27,7 +28,7 @@ func main() {
 	// Open SQLite database
 	var err error
 	db, err = sql.Open("sqlite3", "./sqlite.db")
-	if err != nil {
+	if (err != nil) {
 		log.Fatal(err)
 	}
 	defer db.Close()
@@ -48,22 +49,35 @@ func main() {
 	http.ListenAndServe(":8080", nil)
 }
 
+func migrateAddDueDateColumn() {
+	_, err := db.Query("SELECT due_date FROM todos LIMIT 1")
+	if err != nil {
+		_, err = db.Exec("ALTER TABLE todos ADD COLUMN due_date TEXT")
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+}
+
 func createTable() {
 	query := `
     CREATE TABLE IF NOT EXISTS todos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         task TEXT,
-        position INTEGER
+        position INTEGER,
+        due_date TEXT
     );
     `
 	_, err := db.Exec(query)
-	if err != nil {
+	if (err != nil) {
 		log.Fatal(err)
 	}
 
-	// Ensure the position column is populated
+	// Ensure the position and due_date columns are populated
 	migrateAddPositionColumn()
+	migrateAddDueDateColumn() // New migration function for due_date
 }
+
 
 // Migrate to add 'position' column if it doesn't exist
 func migrateAddPositionColumn() {
@@ -82,7 +96,7 @@ func migrateAddPositionColumn() {
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	rows, err := db.Query("SELECT id, task, position FROM todos ORDER BY position")
+	rows, err := db.Query("SELECT id, task, position, due_date FROM todos ORDER BY due_date")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -92,25 +106,28 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	var todos []Todo
 	for rows.Next() {
 		var todo Todo
-		rows.Scan(&todo.ID, &todo.Task, &todo.Position)
+		rows.Scan(&todo.ID, &todo.Task, &todo.Position, &todo.DueDate)
 		todos = append(todos, todo)
 	}
 
 	tpl.ExecuteTemplate(w, "index.html", todos)
 }
 
+
 func addHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		task := r.FormValue("task")
-		if task != "" {
-			_, err := db.Exec("INSERT INTO todos (task, position) VALUES (?, (SELECT COALESCE(MAX(position), 0) + 1 FROM todos))", task)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-		}
-		renderTaskList(w)
-	}
+    if r.Method == http.MethodPost {
+        task := r.FormValue("task")
+        dueDate := r.FormValue("due_date")
+
+        if task != "" {
+            _, err := db.Exec("INSERT INTO todos (task, position, due_date) VALUES (?, (SELECT COALESCE(MAX(position), 0) + 1 FROM todos), ?)", task, dueDate)
+            if err != nil {
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
+            }
+        }
+        renderTaskList(w)
+    }
 }
 
 func deleteHandler(w http.ResponseWriter, r *http.Request) {
@@ -140,42 +157,61 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 	tpl.ExecuteTemplate(w, "edit.html", todo)
 }
 
-func updateHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodPost {
-		id := r.FormValue("id")
-		task := r.FormValue("task")
-
-		if id != "" && task != "" {
-			_, err := db.Exec("UPDATE todos SET task = ? WHERE id = ?", task, id)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			renderTaskList(w)
-		}
-	}
-}
-
 func searchHandler(w http.ResponseWriter, r *http.Request) {
-	query := r.URL.Query().Get("query")
+    query := r.URL.Query().Get("query")
+    var rows *sql.Rows
+    var err error
+    
+    if query == "" {
+        // If no query, return all todos ordered by due date and position
+        rows, err = db.Query("SELECT id, task, position, due_date FROM todos ORDER BY due_date, position")
+    } else {
+        // If there's a query, search in tasks and order by due date and position
+        rows, err = db.Query(`
+            SELECT id, task, position, due_date 
+            FROM todos 
+            WHERE task LIKE ? 
+            ORDER BY due_date, position
+        `, "%"+query+"%")
+    }
+    
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    defer rows.Close()
 
-	rows, err := db.Query("SELECT id, task, position FROM todos WHERE task LIKE ? ORDER BY position", "%"+query+"%")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer rows.Close()
+    var todos []Todo
+    for rows.Next() {
+        var todo Todo
+        err := rows.Scan(&todo.ID, &todo.Task, &todo.Position, &todo.DueDate)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+        todos = append(todos, todo)
+    }
 
-	var todos []Todo
-	for rows.Next() {
-		var todo Todo
-		rows.Scan(&todo.ID, &todo.Task, &todo.Position)
-		todos = append(todos, todo)
-	}
-
-	tpl.ExecuteTemplate(w, "tasklist", todos)
+    // Execute only the tasklist template, not the entire page
+    tpl.ExecuteTemplate(w, "tasklist", todos)
 }
 
+func updateHandler(w http.ResponseWriter, r *http.Request) {
+    if r.Method == http.MethodPost {
+        id := r.FormValue("id")
+        task := r.FormValue("task")
+        dueDate := r.FormValue("due_date")
+
+        if id != "" && task != "" {
+            _, err := db.Exec("UPDATE todos SET task = ?, due_date = ? WHERE id = ?", task, dueDate, id)
+            if err != nil {
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
+            }
+            http.Redirect(w, r, "/", http.StatusSeeOther)
+        }
+    }
+}
 // Update task order based on drag-and-drop
 func updateOrderHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {

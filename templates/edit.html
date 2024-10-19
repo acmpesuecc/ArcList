@@ -1,25 +1,29 @@
-<!-- edit.html -->
-
-<div class="flex items-center gap-2">
-  <!-- Edit Button -->
-  <form
-    hx-post="/update"
-    hx-target="#todo-list"
-    hx-swap="innerHTML"
-    class="edit-task-form flex items-center"
-  >
-    <input type="hidden" name="id" value="{{.ID}}" />
-    <input
-      type="text"
-      name="task"
-      value="{{.Task}}"
-      class="border border-black rounded px-4 py-2 dark:bg-[hsl(200,100%,18%)] dark:text-[hsl(180,100%,90%)] focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-gray-500"
-    />
-    <button
-      type="submit"
-      class="border p-2.5 px-3 rounded text-sm flex items-center dark:bg-[hsl(200,100%,18%)] dark:text-[hsl(180,100%,90%)] dark:hover:bg-[hsl(200,100%,18%)]/10"
-    >
-      <i class="fa-solid fa-check"></i>
-    </button>
-  </form>
-</div>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Todo - ArcList</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.10/htmx.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen py-8">
+    <div class="w-full max-w-lg mx-auto rounded-lg shadow-md px-8 py-6 bg-white">
+        <h1 class="text-2xl font-bold text-center mb-6">Edit Todo</h1>
+        
+        <form hx-post="/update" hx-target="#task-list" class="space-y-4">
+            <input type="hidden" name="id" value="{{.ID}}">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Task</label>
+                <input type="text" name="task" value="{{.Task}}" class="mt-1 w-full p-2 border rounded">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Due Date</label>
+                <input type="date" name="due_date" value="{{.DueDate}}" class="mt-1 w-full p-2 border rounded">
+            </div>
+            <div class="flex justify-between">
+                <a href="/" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">Back to list</a>
+                <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Update</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

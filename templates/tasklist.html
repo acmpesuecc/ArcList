@@ -1,1 +1,15 @@
-{{define "tasklist"}} {{range .}} {{template "todo-item" .}} {{end}} {{end}}
+{{define "tasklist"}}
+<ul id="todo-list">
+    {{range .}}
+    <li id="task-{{.ID}}">
+        <span>{{.Task}}</span>
+        <span>Due: {{.DueDate}}</span>
+        <form hx-post="/delete" hx-target="#todo-list" hx-swap="innerHTML" style="display:inline;">
+            <input type="hidden" name="id" value="{{.ID}}" />
+            <button type="submit">Delete</button>
+        </form>
+        <a href="/edit/{{.ID}}">Edit</a>
+    </li>
+    {{end}}
+</ul>
+{{end}}
